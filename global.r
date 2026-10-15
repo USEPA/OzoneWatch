@@ -1,3 +1,8 @@
+## Set server type (remote, local)
+## Remote is DMAP staging server (rstudio-connect.dmap-stage.aws.epa.gov)
+## Local is your local machine
+server.type <- "remote"
+
 ## Set options, load required packages
 options(stringsAsFactors=FALSE)
 require(shiny,quietly=TRUE,warn.conflicts=FALSE)
@@ -33,13 +38,20 @@ source("dvtrends.r")
 source("tileplot.r")
 source("max4plot.r")
 
-## Read current year data from pin
-board <- pins::board_connect()
-curr.pin <- paste(Sys.getenv("app_owner"),"OzoneWatch_curr_data",sep="/")
-curr.date <- as.Date(substr(pin_meta(board,name=curr.pin)$created,1,10))
-curr.data <- pin_read(board,name=curr.pin)
-curr.1997 <- curr.data$curr.1997; curr.2008 <- curr.data$curr.2008; curr.2015 <- curr.data$curr.2015;
-sitedv.1997 <- curr.data$sitedv.1997; sitedv.2008 <- curr.data$sitedv.2008; sitedv.2015 <- curr.data$sitedv.2015;
-curr.year <- as.numeric(substr(colnames(sitedv.2015)[grep("dv",colnames(sitedv.2015))],9,12))
+## Server.type = remote - load data from pins
+if (server.type == "remote") {
+  board <- pins::board_connect()
+  curr.pin <- paste(Sys.getenv("app_owner"),"OzoneWatch_curr_data",sep="/")
+  curr.date <- as.Date(substr(pin_meta(board,name=curr.pin)$created,1,10))
+  curr.data <- pin_read(board,name=curr.pin)
+  curr.1997 <- curr.data$curr.1997; curr.2008 <- curr.data$curr.2008; curr.2015 <- curr.data$curr.2015;
+  sitedv.1997 <- curr.data$sitedv.1997; sitedv.2008 <- curr.data$sitedv.2008; sitedv.2015 <- curr.data$sitedv.2015;
+  curr.year <- as.numeric(substr(colnames(sitedv.2015)[grep("dv",colnames(sitedv.2015))],9,12))
+} else { ## Server.type = local - load data from local files
+  files <- list.files("data")
+  load(paste("data",files[length(files)],sep="/"))
+  curr.year <- as.numeric(substr(colnames(sitedv.2015)[grep("dv",colnames(sitedv.2015))],9,12))
+  curr.date <- as.Date(gsub("sitedv_","",gsub(".Rdata","",files[length(files)])),format="%Y%m%d")
+}
 word.date <- as.character(format(curr.date,"%B %e, %Y"))
 this.year <- as.numeric(substr(Sys.Date(),1,4)) == curr.year
