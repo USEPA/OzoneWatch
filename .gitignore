@@ -5,4 +5,4 @@
 .Renviron
 
 # Metadata file
-.yaml
+*.yaml
