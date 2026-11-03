@@ -7,7 +7,7 @@ description: "Ozone Watch is designed to help users keep track of ozone concentr
 url: "https://www.epa.gov/outdoor-air-quality-data/ozone-watch"
 status: "active"
 created: "2022-04-20"
-last_updated: "2026-10-28"
+last_updated: "2026-11-03"
 
 owner:
   name: "Ben Wells"
@@ -32,7 +32,7 @@ data:
   classification: "public"
 
 outputs:
-  files: ["daily_yyyymmdd.Rdata","hist_1997_yyyymmdd.Rdata","hist_2008_yyyymmdd.Rdata","hist_2015_yyyymmdd.Rdata","map_data_20m.Rdata","map_data_500k.Rdata","O3_naa_1997.Rdata","O3_naa_2008.Rdata","O3_naa_2015.Rdata","sitedv_yyyymmdd.Rdata"]
+  files: ["daily_20261103.Rdata","hist_1997_20261103.Rdata","hist_2008_20261103.Rdata","hist_2015_20261103.Rdata","map_data_20m.Rdata","map_data_500k.Rdata","O3_naa_1997.Rdata","O3_naa_2008.Rdata","O3_naa_2015.Rdata","sitedv_20261103.Rdata"]
   description: "Static copy of the data files stored on the DMAP server - to be used for development purposes only"
 
 documentation:
