@@ -1,0 +1,8 @@
+# Local data files
+/data_dev/
+
+# Local credentials
+.Renviron
+
+# Metadata file
+.yaml

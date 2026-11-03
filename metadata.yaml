@@ -1,0 +1,43 @@
+---
+title: "Ozone Watch"
+project_id: "OzoneWatch"
+project_type: "application"
+description: "Ozone Watch is designed to help users keep track of ozone concentrations reported during the current ozone season and understand the possible implications for attainment of the National Ambient Air Quality Standards (NAAQS) for ozone during the current 3-year design value period. The information in Ozone Watch is based on ozone concentration data reported to the EPA's Air Quality System (AQS) database, combined with real-time ozone concentration data reported to the EPA's AirNow database on days where the data have not yet been submitted to AQS."
+
+url: "https://www.epa.gov/outdoor-air-quality-data/ozone-watch"
+status: "active"
+created: "2022-04-20"
+last_updated: "2026-10-28"
+
+owner:
+  name: "Ben Wells"
+  organization: "US EPA"
+  contact: "wells.benjamin@epa.gov"
+  github: "bentwells"
+
+maintainers: "Ben Wells"
+
+repository:
+  url: "https://github.com/USEPA/OzoneWatch/"
+  license: ""
+
+software:
+  languages: "R"
+  dependencies: ["DT","pins","plyr","reshape2","sf","shiny"]
+  environment: "DMAP public and staging servers"
+
+data:
+  sources: ["AQS","AirNow"]
+  access_notes: "Retrieves AQS data and AirNow data stored in AQS, merges them and calculates preliminary ozone DVs"
+  classification: "public"
+
+outputs:
+  files: ["daily_yyyymmdd.Rdata","hist_1997_yyyymmdd.Rdata","hist_2008_yyyymmdd.Rdata","hist_2015_yyyymmdd.Rdata","map_data_20m.Rdata","map_data_500k.Rdata","O3_naa_1997.Rdata","O3_naa_2008.Rdata","O3_naa_2015.Rdata","sitedv_yyyymmdd.Rdata"]
+  description: "Static copy of the data files stored on the DMAP server - to be used for development purposes only"
+
+documentation:
+  readme: "README.md"
+  additional_files: ""
+
+notes: "See README.md for details"
+  

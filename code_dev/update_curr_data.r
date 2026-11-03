@@ -1,12 +1,11 @@
 ####################################################################
 ## Ozone Watch: Preliminary ozone design values for the current year
 ## Author: Ben Wells, Statistician, US EPA OAQPS/AQAD/AQAG
-## Last Updated: October 9, 2025
+## Last Updated: October 20, 2026
 ####################################################################
 
 ## Set up working environment
-if (dir.exists("C:/")) { source("C:/Users/bwells01/Documents/R/get_monitors.r") }
-if (dir.exists("/home/bwells01/")) { source("/home/bwells01/R/get_monitors.r") }
+source("code_dev/get_monitors.r")
 library(data.table); library(plyr); library(openxlsx);
 options(stringsAsFactors=FALSE)
 max.na <- function(x) { return(ifelse(any(!is.na(x)),max(x,na.rm=TRUE),NA)) }
@@ -15,7 +14,7 @@ date.stamp <- format(Sys.Date(),"%Y%m%d")
 year <- as.numeric(substr(date.stamp,1,4))-(as.numeric(substr(date.stamp,5,6)) < 4)
 d1 <- paste(year,"-01-01 00:00:00",sep="")
 d2 <- paste(year+1,"-01-01 06:00:00",sep="")
-area.wb <- loadWorkbook("OzoneWatch/docs/Ozone Watch template.xlsx")
+area.wb <- loadWorkbook("xlsx/Ozone Watch template.xlsx")
 site.wb <- createWorkbook()
 title <- createStyle(halign="center",valign="bottom",textDecoration="bold",
   border="Bottom",wrapText=TRUE)
@@ -50,15 +49,9 @@ max4.cum <- function(x) {
 }
 
 ## Get list of nonattainment areas to include for 2015, 2008, 1997, and 1979 standards
-dv.dir <- paste("OzoneDV/DV",year-3,"_",year-1,sep="")
-all.subdir <- list.files(dv.dir)[which(substr(list.files(dv.dir),1,1) %in% c(0:9))]
-dir.num <- which.max(as.numeric(paste(substr(all.subdir,6,7),sprintf("%02d",
-  match(tolower(substr(all.subdir,3,5)),tolower(month.abb))),substr(all.subdir,1,2),sep="")))
-dv.subdir <- paste(dv.dir,all.subdir[dir.num],sep="/")
-load(paste(dv.subdir,list.files(dv.subdir)[intersect(grep("dvtables",list.files(dv.subdir)),
-  grep(".Rdata",list.files(dv.subdir)))],sep="/")[1])
+load(paste("data_dev/dvtables_",(year-3),"_",(year-1),"_",date.stamp,".Rdata",sep=""))
 naa.list.2015 <- table1a$naa_name
-naa.list.2008 <- subset(table1b,(status == "Nonattainment" & classification != "Marginal") | dv > 0.07)$naa_name
+naa.list.2008 <- subset(table1b,dv > 0.07)$naa_name
 naa.list.1997 <- subset(table1c,dv > 0.075)$naa_name
 naa.list.1979 <- c("Baltimore Area, MD","Baton Rouge Area, LA",
   "Chicago-Gary-Lake County Area, IL-IN","Houston-Galveston-Brazoria Area, TX",
@@ -285,7 +278,7 @@ for (p in 12:9) {
     ifelse(obs >= req.obs | dmax >= (level + 1),floor(dmax),NA),temp$obs,temp$dmax))
   
   ## Bring in design value statistics for previous 2 years
-  load(paste(dv.subdir,"/dv_",year-12,"_",year-1,"_",method,"RC",level,".Rdata",sep=""))
+  load(paste("data_dev/dv_",year-12,"_",year-1,"_",method,"RC",level,".Rdata",sep=""))
   vals <- subset(out,!is.na(eval(parse(text=paste("max1",(year-2),sep=".")))) |
     !is.na(eval(parse(text=paste("max1",(year-1),sep=".")))),c(1:11,
     grep((year-2),colnames(out)),grep((year-1),colnames(out))))
@@ -697,23 +690,12 @@ for (p in 12:9) {
   cat(naaqs,"NAAQS",level,"ppb",as.character(round(Sys.time())),"\n")
 }
 
-## Save daily data and preliminary site-level DVs for shiny application
+## Save daily data and site-level DVs for use in the shiny app
 save(curr.1997,curr.2008,curr.2015,
-  file=paste("OzoneWatch/data/daily_",date.stamp,".Rdata",sep=""))
+  file=paste("data/daily_",date.stamp,".Rdata",sep=""))
 save(sitedv.1997,sitedv.2008,sitedv.2015,
-  file=paste("OzoneWatch/data/sitedv_",date.stamp,".Rdata",sep=""))
+  file=paste("data/sitedv_",date.stamp,".Rdata",sep=""))
 
 ## Write area-level and site-level tables to Excel files
-saveWorkbook(area.wb,file=paste("OzoneWatch/xlsx_archive/Ozone_Watch_",date.stamp,".xlsx",sep=""))
-saveWorkbook(site.wb,file=paste("OzoneWatch/xlsx_archive/sitedv_",date.stamp,".xlsx",sep=""))
-
-## Copy shiny app data files for publication, remove previous data files
-app.files <- list.files("OzoneWatch/OzoneWatch_old/data/")
-old.daily.file <- app.files[grep("daily_",app.files)][1]
-old.dv.file <- app.files[grep("sitedv_",app.files)][1]
-system(paste("cp OzoneWatch/data/daily_",date.stamp,".Rdata ",
-  "OzoneWatch/OzoneWatch_old/data/daily_",date.stamp,".Rdata",sep=""))
-system(paste("cp OzoneWatch/data/sitedv_",date.stamp,".Rdata ",
-  "OzoneWatch/OzoneWatch_old/data/sitedv_",date.stamp,".Rdata",sep=""))
-unlink(paste("OzoneWatch/OzoneWatch_old/data/",old.daily.file,sep=""))
-unlink(paste("OzoneWatch/OzoneWatch_old/data/",old.dv.file,sep=""))
+saveWorkbook(area.wb,file=paste("xlsx/Ozone_Watch_",date.stamp,".xlsx",sep=""))
+saveWorkbook(site.wb,file=paste("xlsx/sitedv_",date.stamp,".xlsx",sep=""))

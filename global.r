@@ -31,15 +31,14 @@ get.max.site <- function(sites,vals) {
 }
 
 ## Run source code for sub-applications
-source("rmapfuns.r")
-source("dvtables.r")
-source("areamaps.r")
-source("dvtrends.r")
-source("tileplot.r")
-source("max4plot.r")
+source("code/rmapfuns.r")
+source("code/dvtables.r")
+source("code/areamaps.r")
+source("code/dvtrends.r")
+source("code/tileplot.r")
+source("code/max4plot.r")
 
-## Server.type = remote - load data from pins
-if (server.type == "remote") {
+if (server.type == "remote") { ## Server.type = remote - load data from pins
   board <- pins::board_connect()
   curr.pin <- paste(Sys.getenv("app_owner"),"OzoneWatch_curr_data",sep="/")
   curr.date <- as.Date(substr(pin_meta(board,name=curr.pin)$created,1,10))
@@ -49,7 +48,8 @@ if (server.type == "remote") {
   curr.year <- as.numeric(substr(colnames(sitedv.2015)[grep("dv",colnames(sitedv.2015))],9,12))
 } else { ## Server.type = local - load data from local files
   files <- list.files("data")
-  load(paste("data",files[length(files)],sep="/"))
+  load(paste("data",files[grep("daily",files)],sep="/"))
+  load(paste("data",files[grep("sitedv",files)],sep="/"))
   curr.year <- as.numeric(substr(colnames(sitedv.2015)[grep("dv",colnames(sitedv.2015))],9,12))
   curr.date <- as.Date(gsub("sitedv_","",gsub(".Rdata","",files[length(files)])),format="%Y%m%d")
 }

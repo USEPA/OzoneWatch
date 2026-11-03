@@ -1,18 +1,12 @@
 ##########################################################
 ## Generate historical datasets used in Ozone Watch
 ## Author: Ben Wells, Statistician, US EPA OAQPS/AQAD/AQAG
-## Last Updated: October 9, 2025
+## Last Updated: October 28, 2026
 ##########################################################
 
 ## Set up working environment
-if (dir.exists("C:/")) { 
-  source("C:/Users/bwells01/Documents/R/get_monitors.r")
-  source("C:/Users/bwells01/Documents/R/get_rawdata.r") 
-}
-if (dir.exists("/home/")) { 
-  source("/home/bwells01/R/get_monitors.r")
-  source("/home/bwells01/R/get_rawdata.r")
-}
+source("code_dev/get_monitors.r")
+source("code_dev/get_rawdata.r")
 library(data.table); library(plyr); 
 options(stringsAsFactors=FALSE)
 date.stamp <- format(Sys.Date(),"%Y%m%d")
@@ -26,23 +20,18 @@ for (y in (year-12):(year-1)) {
 }
 
 ## Calculate design values for all ozone standards
-dv.dir <- paste("OzoneDV/DV",year-3,"_",year-1,sep="")
-source(paste(dv.dir,"/code/dvs_step1.r",sep=""))
-source(paste(dv.dir,"/code/dvs_step2.r",sep=""))
-today <- toupper(format(Sys.Date(),"%d%b%y"))
-work.dir <- paste(dv.dir,today,sep="/")
-if (!dir.exists(work.dir)) {
-  cat("Calculating Ozone Design Values - 2015 NAAQS...\n")
-  design.values(years=c((year-12):(year-1)),method="U",level=70,nonreg=FALSE,ee.type="C")
-  cat("Calculating Ozone Design Values - 2008 NAAQS...\n")
-  design.values(years=c((year-12):(year-1)),method="P",level=75,nonreg=FALSE,ee.type="C")
-  cat("Calculating Ozone Design Values - 1997 NAAQS...\n")
-  design.values(years=c((year-12):(year-1)),method="I",level=84,nonreg=FALSE,ee.type="C")
-  cat("Calculating Ozone Design Values - 1979 NAAQS...\n")
-  design.values(years=c((year-12):(year-1)),method="H",level=124,nonreg=FALSE,ee.type="C")
-  cat("Creating historical DV tables...\n")
-  dv.tables(years=c((year-12):(year-1)),step1.date=today,type="FINAL")
-}
+source("code_dev/dvs_step1.r")
+source("code_dev/dvs_step2.r")
+cat("Calculating Ozone Design Values - 2015 NAAQS...\n")
+design.values(years=c((year-12):(year-1)),method="U",level=70,nonreg=FALSE,ee.type="C")
+cat("Calculating Ozone Design Values - 2008 NAAQS...\n")
+design.values(years=c((year-12):(year-1)),method="P",level=75,nonreg=FALSE,ee.type="C")
+cat("Calculating Ozone Design Values - 1997 NAAQS...\n")
+design.values(years=c((year-12):(year-1)),method="I",level=84,nonreg=FALSE,ee.type="C")
+cat("Calculating Ozone Design Values - 1979 NAAQS...\n")
+design.values(years=c((year-12):(year-1)),method="H",level=124,nonreg=FALSE,ee.type="C")
+cat("Creating historical DV tables...\n")
+dv.tables(years=c((year-12):(year-1)))
 
 ## Function to create a time-series of the cumulative annual 4th highest value
 max4.cum <- function(x) {
@@ -65,10 +54,10 @@ for (p in 10:12) {
   level <- ifelse(p == 10,84,ifelse(p == 11,75,70))
   method <- ifelse(p == 10,"I",ifelse(p == 11,"P","U"))
   naaqs <- ifelse(p == 10,"1997",ifelse(p == 11,"2008","2015"))
-  cat("Creating historical daily data files -",naaqs,"NAAQS...")
-  load(paste(work.dir,"/daily_",year-12,"_",year-1,"_",method,"RC",level,".Rdata",sep=""))
-  load(paste(work.dir,"/dv_",year-12,"_",year-1,"_",method,"RC",level,".Rdata",sep=""))
-  load(paste(work.dir,"/monitors_",year-12,"_",year-1,".Rdata",sep=""))
+  cat("Creating historical daily data files -",naaqs,"NAAQS...\n")
+  load(paste("data_dev/daily_",year-12,"_",year-1,"_",method,"RC",level,".Rdata",sep=""))
+  load(paste("data_dev/dv_",year-12,"_",year-1,"_",method,"RC",level,".Rdata",sep=""))
+  load(paste("data_dev/monitors_",year-12,"_",year-1,".Rdata",sep=""))
   daily$year <- substr(daily$date,1,4)
   daily.data <- ddply(daily,c("site","year"),summarize,
     day=substr(date,6,10),dmax=floor(dmax),max4=max4.cum(dmax),exc=cum.exc(dmax,level))
@@ -95,8 +84,6 @@ for (p in 10:12) {
   }
   
   ## Populate historical data list objects for each site
-  app.files <- list.files("OzoneWatch/OzoneWatch_old/data/")
-  old.hist.files <- app.files[grep("hist_",app.files)]
   hist <- vector("list",length(temp))
   for (i in 1:length(temp)) {
     dvdf <- data.frame(site=rep(dvs$site[i],12),
@@ -129,11 +116,9 @@ for (p in 10:12) {
     hist[[i]]$dv_data <- dvdf
     hist[[i]]$daily_data <- temp[[i]]
   }
+  
+  ## Save historical data objects for use in the shiny app
   assign(paste("hist",naaqs,sep="."),hist)
-  hist.file <- paste("OzoneWatch/OzoneWatch_old/data/hist_",naaqs,"_",date.stamp,".Rdata",sep="")
+  hist.file <- paste("data/hist_",naaqs,"_",date.stamp,".Rdata",sep="")
   save(list=paste("hist",naaqs,sep="."),file=hist.file)
-  cat("Done.",as.character(round(Sys.time())),"\n")
 }
-
-## Delete previous versions of historical files
-unlink(paste("OzoneWatch/OzoneWatch_old/data/",old.hist.files,sep=""))
